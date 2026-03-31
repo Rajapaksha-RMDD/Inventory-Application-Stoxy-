@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:stoxy/Screens/login_screen.dart'; // Make sure this path matches your folder structure
+import 'package:firebase_core/firebase_core.dart';
+import 'package:stoxy/Screens/login_screen.dart';
+import 'firebase_options.dart'; // <--- Now imported properly
 
-void main() {
-  runApp(const StoxyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp());
 }
 
-class StoxyApp extends StatelessWidget {
-  const StoxyApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Stoxy',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        useMaterial3: true,
-      ),
-      // Setting LoginScreen as the starting page
-      home: const LoginScreen(),
+      theme: ThemeData(primarySwatch: Colors.green),
+      home: LoginScreen(), // ✅ REMOVED 'const'
     );
   }
 }

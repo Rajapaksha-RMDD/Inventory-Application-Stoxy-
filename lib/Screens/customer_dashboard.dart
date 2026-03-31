@@ -1,7 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'login_screen.dart';
 
 class CustomerDashboard extends StatelessWidget {
   const CustomerDashboard({super.key});
+
+  // Function to handle the silent delete and logout logic
+  Future<void> _handleLogout(BuildContext context) async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        String uid = user.uid;
+        // 1. Delete user record from Firestore
+        await FirebaseFirestore.instance.collection('users').doc(uid).delete();
+        // 2. Delete the Firebase Auth account
+        await user.delete();
+      }
+    } catch (e) {
+      // Fallback: If delete fails (re-auth required), just sign out
+      await FirebaseAuth.instance.signOut();
+    }
+
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,9 +44,10 @@ class CustomerDashboard extends StatelessWidget {
         ),
         centerTitle: true,
         actions: [
+          // Use the logout button to trigger the delete logic
           IconButton(
-            icon: const Icon(Icons.notifications_none, color: Color(0xFF1B5E20)),
-            onPressed: () {},
+            icon: const Icon(Icons.logout, color: Color(0xFF1B5E20)),
+            onPressed: () => _handleLogout(context),
           ),
         ],
       ),
@@ -58,6 +87,7 @@ class CustomerDashboard extends StatelessWidget {
             // View All Button
             SizedBox(
               width: double.infinity,
+              height: 45,
               child: ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
@@ -84,6 +114,7 @@ class CustomerDashboard extends StatelessWidget {
       ),
       // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         selectedItemColor: const Color(0xFF1B5E20),
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
