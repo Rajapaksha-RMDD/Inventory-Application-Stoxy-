@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:stoxy/Screens/login_screen.dart';
-import 'firebase_options.dart'; // <--- Now imported properly
+// <--- Now imported properly
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

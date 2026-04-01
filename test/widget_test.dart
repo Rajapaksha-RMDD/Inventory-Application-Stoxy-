@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stoxy/main.dart';
 
@@ -8,8 +7,8 @@ void main() {
     // 2. Remove 'const' because Firebase apps are dynamic
     await tester.pumpWidget(MyApp());
 
-    // Note: This default counter test will likely fail now because 
-    // your app starts with a Login screen, not a counter. 
+    // Note: This default counter test will likely fail now because
+    // your app starts with a Login screen, not a counter.
     // This is normal!
   });
 }
