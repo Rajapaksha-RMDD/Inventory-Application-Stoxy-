@@ -10,7 +10,6 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // 1. Controllers
   final TextEditingController _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -20,49 +19,106 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final List<String> roles = ['Customer', 'Supplier'];
   bool _isLoading = false;
 
-  // 2. Logic to Register & Save to Firestore
+  // UPDATED: Immediate Redirect & Friendly Errors
   Future<void> _handleRegister() async {
-    if (_passwordController.text != _confirmPasswordController.text) {
-      _showSnackBar("Passwords do not match!");
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty) {
+      _showSnackBar("Please fill in all fields.", isError: true);
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showSnackBar("Passwords do not match!", isError: true);
+      return;
+    }
+
+    if (password.length < 6) {
+      _showSnackBar("Password must be at least 6 characters.", isError: true);
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      // Create Auth User
+      // 1. Create Auth User
       UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+          .createUserWithEmailAndPassword(email: email, password: password);
 
-      // Save additional data to Firestore
+      // 2. Save to Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
           .set({
         'uid': userCredential.user!.uid,
-        'name': _nameController.text.trim(),
-        'email': _emailController.text.trim(),
+        'name': name,
+        'email': email,
         'role': selectedRole,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
       if (mounted) {
-        _showSnackBar("Registration Successful!");
-        Navigator.pop(context); // Go back to login
+        _showSnackBar("Account created successfully!");
+        Navigator.pop(context); // Immediate return to Login
       }
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = "This email is already registered.";
+          break;
+        case 'invalid-email':
+          message = "The email address is not valid.";
+          break;
+        case 'weak-password':
+          message = "The password is too weak.";
+          break;
+        case 'network-request-failed':
+          message = "Check your internet connection.";
+          break;
+        default:
+          message = "Registration failed. Please try again.";
+      }
+      _showSnackBar(message, isError: true);
     } catch (e) {
-      _showSnackBar("Error: ${e.toString()}");
+      _showSnackBar("An unexpected error occurred.", isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showSnackBar(String message) {
+  // Beautiful Floating SnackBar
+  void _showSnackBar(String message, {bool isError = false}) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: isError ? Colors.red.shade800 : const Color(0xFF1B5E20),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          duration: const Duration(seconds: 3),
+          elevation: 6,
+        ),
+      );
     }
   }
 
@@ -78,7 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE8F5E9), // Light Mint Background
+      backgroundColor: const Color(0xFFE8F5E9),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -88,28 +144,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 40),
               _buildHeader(),
               const SizedBox(height: 40),
-
               _buildLabel("Full Name"),
               _buildTextField(icon: Icons.person_outline, controller: _nameController, hint: "Your Name"),
-
               _buildLabel("Email Address"),
-              _buildTextField(icon: Icons.email_outlined, controller: _emailController, hint: "exsistname@mail.com"),
-
+              _buildTextField(icon: Icons.email_outlined, controller: _emailController, hint: "example@mail.com"),
               _buildLabel("Password"),
               _buildTextField(icon: Icons.lock_outline, isPassword: true, controller: _passwordController, hint: "••••••••"),
-
               _buildLabel("Confirm Password"),
               _buildTextField(icon: Icons.lock_outline, isPassword: true, controller: _confirmPasswordController, hint: "••••••••"),
-
               _buildLabel("Role"),
               _buildRoleDropdown(),
-
               const SizedBox(height: 40),
-
               _isLoading
                   ? const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20)))
                   : _buildActionButton("Register", _handleRegister),
-
               const SizedBox(height: 20),
               _buildLoginLink(),
               const SizedBox(height: 30),
@@ -119,8 +167,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-
-  // --- UI HELPER METHODS ---
 
   Widget _buildHeader() {
     return Center(
