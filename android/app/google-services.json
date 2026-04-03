@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "687535824647",
-    "project_id": "stoxy-928e8",
-    "storage_bucket": "stoxy-928e8.firebasestorage.app"
+    "project_number": "763862308493",
+    "project_id": "inventory-app-12174",
+    "storage_bucket": "inventory-app-12174.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:687535824647:android:11081cbbdedf56df442fa2",
+        "mobilesdk_app_id": "1:763862308493:android:79d8ec4596ed1c94caf4c4",
         "android_client_info": {
           "package_name": "com.example.stoxy"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBsSEe7TyAdtMexsGh6nyb2EbHlVFdkGGU"
+          "current_key": "AIzaSyC4Ahy8Sv_ubv9latxsesAjt3hVwZ5eBWI"
         }
       ],
       "services": {

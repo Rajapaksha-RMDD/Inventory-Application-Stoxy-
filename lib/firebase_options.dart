@@ -41,48 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCrwxu-KwUr3aPaoWgC5bCEIhcT18CyDBo',
-    appId: '1:687535824647:web:4bcce1477f07e9ff442fa2',
-    messagingSenderId: '687535824647',
-    projectId: 'stoxy-928e8',
-    authDomain: 'stoxy-928e8.firebaseapp.com',
-    storageBucket: 'stoxy-928e8.firebasestorage.app',
-    measurementId: 'G-LBF49X6TEQ',
+    apiKey: 'AIzaSyB6fTtVES61WzIhogy4sXIwp0pHnpAk4p0',
+    appId: '1:763862308493:web:bcb6d8905ca0389ecaf4c4',
+    messagingSenderId: '763862308493',
+    projectId: 'inventory-app-12174',
+    authDomain: 'inventory-app-12174.firebaseapp.com',
+    storageBucket: 'inventory-app-12174.firebasestorage.app',
+    measurementId: 'G-Q95RGFWF5V',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBsSEe7TyAdtMexsGh6nyb2EbHlVFdkGGU',
-    appId: '1:687535824647:android:11081cbbdedf56df442fa2',
-    messagingSenderId: '687535824647',
-    projectId: 'stoxy-928e8',
-    storageBucket: 'stoxy-928e8.firebasestorage.app',
+    apiKey: 'AIzaSyC4Ahy8Sv_ubv9latxsesAjt3hVwZ5eBWI',
+    appId: '1:763862308493:android:79d8ec4596ed1c94caf4c4',
+    messagingSenderId: '763862308493',
+    projectId: 'inventory-app-12174',
+    storageBucket: 'inventory-app-12174.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCohvQZXi_fDXNA_S1HtBvEOuNtqkh85eY',
-    appId: '1:687535824647:ios:716d7ebcd8c7d922442fa2',
-    messagingSenderId: '687535824647',
-    projectId: 'stoxy-928e8',
-    storageBucket: 'stoxy-928e8.firebasestorage.app',
+    apiKey: 'AIzaSyBRIEp8XQaNah7KQ-midwIGg0OrI79VAPE',
+    appId: '1:763862308493:ios:8e178000cad52856caf4c4',
+    messagingSenderId: '763862308493',
+    projectId: 'inventory-app-12174',
+    storageBucket: 'inventory-app-12174.firebasestorage.app',
     iosBundleId: 'com.example.stoxy',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCohvQZXi_fDXNA_S1HtBvEOuNtqkh85eY',
-    appId: '1:687535824647:ios:716d7ebcd8c7d922442fa2',
-    messagingSenderId: '687535824647',
-    projectId: 'stoxy-928e8',
-    storageBucket: 'stoxy-928e8.firebasestorage.app',
+    apiKey: 'AIzaSyBRIEp8XQaNah7KQ-midwIGg0OrI79VAPE',
+    appId: '1:763862308493:ios:8e178000cad52856caf4c4',
+    messagingSenderId: '763862308493',
+    projectId: 'inventory-app-12174',
+    storageBucket: 'inventory-app-12174.firebasestorage.app',
     iosBundleId: 'com.example.stoxy',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCrwxu-KwUr3aPaoWgC5bCEIhcT18CyDBo',
-    appId: '1:687535824647:web:a45cd82540d08ed5442fa2',
-    messagingSenderId: '687535824647',
-    projectId: 'stoxy-928e8',
-    authDomain: 'stoxy-928e8.firebaseapp.com',
-    storageBucket: 'stoxy-928e8.firebasestorage.app',
-    measurementId: 'G-R7ZHX7WMXL',
+    apiKey: 'AIzaSyB6fTtVES61WzIhogy4sXIwp0pHnpAk4p0',
+    appId: '1:763862308493:web:b24029732780b4a3caf4c4',
+    messagingSenderId: '763862308493',
+    projectId: 'inventory-app-12174',
+    authDomain: 'inventory-app-12174.firebaseapp.com',
+    storageBucket: 'inventory-app-12174.firebasestorage.app',
+    measurementId: 'G-XTJ41RSKG3',
   );
+
 }

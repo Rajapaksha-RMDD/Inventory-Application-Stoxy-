@@ -7,12 +7,29 @@ import 'low_stock_screen.dart';
 class CustomerDashboard extends StatelessWidget {
   const CustomerDashboard({super.key});
 
+  // --- FETCH CUSTOMER NAME FROM FIRESTORE ---
+  Future<String> _fetchUserName() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+        if (userDoc.exists) return userDoc['name'] ?? "Customer";
+      }
+    } catch (e) {
+      debugPrint("Error fetching name: $e");
+    }
+    return "Customer";
+  }
+
   // --- STYLED LOGOUT & DELETE ACCOUNT ALERT ---
   void _showLogoutOptions(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFE8F5E9), // Matching Light Green
+        backgroundColor: const Color(0xFFE8F5E9),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         title: Row(
           children: [
@@ -44,7 +61,7 @@ class CustomerDashboard extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1B5E20), // Navy/Emerald
+                        backgroundColor: const Color(0xFF1B5E20),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                       icon: const Icon(Icons.logout, size: 18, color: Colors.white),
@@ -145,6 +162,32 @@ class CustomerDashboard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // --- WELCOME SECTION ---
+                FutureBuilder<String>(
+                  future: _fetchUserName(),
+                  builder: (context, nameSnapshot) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Hello, ${nameSnapshot.data ?? '...'}!",
+                          style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1B5E20)
+                          ),
+                        ),
+                        const Text(
+                          "Welcome back to your Stoxy portal.",
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 25),
+
+                // --- SEARCH BAR ---
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
@@ -153,6 +196,8 @@ class CustomerDashboard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 25),
+
+                // --- SUMMARY CARDS ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -167,6 +212,8 @@ class CustomerDashboard extends StatelessWidget {
                 const SizedBox(height: 30),
                 const Text("Suppliers & Catalogs", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2E4D3E))),
                 const SizedBox(height: 15),
+
+                // --- SUPPLIER LIST ---
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'Supplier').snapshots(),
                   builder: (context, supplierSnapshot) {
@@ -289,7 +336,6 @@ class _RequestItemRowState extends State<RequestItemRow> {
                     });
                     qtyController.clear();
                     if (mounted) {
-                      // UPDATED: Emerald Green Styled Confirmation
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Column(
