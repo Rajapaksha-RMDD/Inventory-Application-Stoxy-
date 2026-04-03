@@ -13,7 +13,7 @@ class SupplierDashboard extends StatefulWidget {
 }
 
 class _SupplierDashboardState extends State<SupplierDashboard> {
-  // --- UPDATED STYLED SNACKBAR ---
+
   void _showCustomSnackBar(BuildContext context, String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -38,7 +38,6 @@ class _SupplierDashboardState extends State<SupplierDashboard> {
     );
   }
 
-  // --- STYLED LOGOUT & DELETE ACCOUNT ALERT ---
   void _showLogoutOptions(BuildContext context) {
     showDialog(
       context: context,
@@ -165,13 +164,14 @@ class _SupplierDashboardState extends State<SupplierDashboard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text("Hello, ${snapshot.data ?? '...'}!",
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20))),
+                        style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20))),
                     const Text("Manage your incoming customer stock requests.", style: TextStyle(color: Colors.grey)),
                   ],
                 );
               },
             ),
             const SizedBox(height: 25),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -181,15 +181,24 @@ class _SupplierDashboardState extends State<SupplierDashboard> {
               ],
             ),
             const SizedBox(height: 30),
+
             const Text("Incoming Customer Requests", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2D4F1E))),
             const SizedBox(height: 15),
+
             StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('requests').where('supplierId', isEqualTo: currentSupplierId).orderBy('timestamp', descending: true).snapshots(),
+              stream: FirebaseFirestore.instance
+                  .collection('requests')
+                  .where('supplierId', isEqualTo: currentSupplierId)
+                  .orderBy('timestamp', descending: true)
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) return Text("Error: ${snapshot.error}");
                 if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20)));
-                final docs = snapshot.data!.docs;
+
+                final docs = snapshot.data!.docs.where((d) => (d.data() as Map<String, dynamic>)['completed'] != true).toList();
+
                 if (docs.isEmpty) return const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 30), child: Text("No pending requests.", style: TextStyle(color: Colors.grey))));
+
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -198,17 +207,19 @@ class _SupplierDashboardState extends State<SupplierDashboard> {
                     var doc = docs[index];
                     var data = doc.data() as Map<String, dynamic>;
                     return _buildLiveRequestCard(
-                        context: context,
-                        docId: doc.id,
-                        customer: data['customerName'] ?? "Unknown",
-                        product: data['productName'] ?? "Product",
-                        qty: data['requestQty']?.toString() ?? "0"
+                      context: context,
+                      docId: doc.id,
+                      customer: data['customerName'] ?? "Unknown",
+                      product: data['productName'] ?? "Product",
+                      qty: data['requestQty']?.toString() ?? "0",
+                      currentSupplierId: currentSupplierId,
                     );
                   },
                 );
               },
             ),
             const SizedBox(height: 25),
+
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -238,7 +249,14 @@ class _SupplierDashboardState extends State<SupplierDashboard> {
     );
   }
 
-  Widget _buildLiveRequestCard({required BuildContext context, required String docId, required String customer, required String product, required String qty}) {
+  Widget _buildLiveRequestCard({
+    required BuildContext context,
+    required String docId,
+    required String customer,
+    required String product,
+    required String qty,
+    required String currentSupplierId,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(15),
@@ -263,9 +281,48 @@ class _SupplierDashboardState extends State<SupplierDashboard> {
           IconButton(
               icon: const Icon(Icons.check_circle, color: Colors.green, size: 28),
               onPressed: () async {
-                await FirebaseFirestore.instance.collection('requests').doc(docId).delete();
-                if (mounted) {
-                  _showCustomSnackBar(context, "Stock Request Completed", const Color(0xFF1B5E20));
+                try {
+                  // Mark request as completed
+                  await FirebaseFirestore.instance.collection('requests').doc(docId).update({
+                    'completed': true,
+                    'completedAt': FieldValue.serverTimestamp(),
+                  });
+
+                  // Fetch request data to get product name & qty
+                  DocumentSnapshot requestDoc = await FirebaseFirestore.instance
+                      .collection('requests')
+                      .doc(docId)
+                      .get();
+                  var requestData = requestDoc.data() as Map<String, dynamic>;
+                  String productName = requestData['productName'] ?? '';
+                  int requestedQty = int.tryParse(requestData['requestQty'].toString()) ?? 0;
+
+                  // Find matching product and increment its quantity
+                  if (productName.isNotEmpty && requestedQty > 0) {
+                    QuerySnapshot productQuery = await FirebaseFirestore.instance
+                        .collection('products')
+                        .where('name', isEqualTo: productName)
+                        .where('supplierId', isEqualTo: currentSupplierId)
+                        .limit(1)
+                        .get();
+
+                    if (productQuery.docs.isNotEmpty) {
+                      await FirebaseFirestore.instance
+                          .collection('products')
+                          .doc(productQuery.docs.first.id)
+                          .update({
+                        'quantity': FieldValue.increment(requestedQty),
+                      });
+                    }
+                  }
+
+                  if (context.mounted) {
+                    _showCustomSnackBar(context, "✅ Request Cleared", const Color(0xFF1B5E20));
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    _showCustomSnackBar(context, "Error: $e", Colors.red.shade700);
+                  }
                 }
               }
           ),

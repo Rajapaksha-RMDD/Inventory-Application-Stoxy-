@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Stoxy',
       theme: ThemeData(primarySwatch: Colors.green),
-      home: LoginScreen(), // ✅ REMOVED 'const'
+      home: LoginScreen(), //
     );
   }
 }
