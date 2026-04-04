@@ -5,7 +5,6 @@ import 'login_screen.dart';
 
 
 //  CUSTOMER DASHBOARD
-
 class CustomerDashboard extends StatelessWidget {
   const CustomerDashboard({super.key});
 
@@ -68,12 +67,14 @@ class CustomerDashboard extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
-                      icon: const Icon(Icons.logout, size: 18, color: Colors.white),
+                      icon: const Icon(Icons.logout,
+                          size: 18, color: Colors.white),
                       label: const Text("Sign Out",
                           style: TextStyle(color: Colors.white)),
                       onPressed: () => FirebaseAuth.instance
                           .signOut()
-                          .then((_) => Navigator.pushReplacement(context,
+                          .then((_) => Navigator.pushReplacement(
+                          context,
                           MaterialPageRoute(
                               builder: (_) => const LoginScreen()))),
                     ),
@@ -210,8 +211,8 @@ class CustomerDashboard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text("Unique Products",
-                          style: TextStyle(
-                              color: Colors.white70, fontSize: 11)),
+                          style:
+                          TextStyle(color: Colors.white70, fontSize: 11)),
                       const SizedBox(height: 6),
                       Text(uniqueProducts.toString(),
                           style: const TextStyle(
@@ -219,8 +220,8 @@ class CustomerDashboard extends StatelessWidget {
                               fontSize: 28,
                               fontWeight: FontWeight.bold)),
                       const Text("product types",
-                          style: TextStyle(
-                              color: Colors.white60, fontSize: 10)),
+                          style:
+                          TextStyle(color: Colors.white60, fontSize: 10)),
                     ],
                   ),
                 ),
@@ -238,8 +239,8 @@ class CustomerDashboard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text("Total Quantity",
-                          style: TextStyle(
-                              color: Colors.white70, fontSize: 11)),
+                          style:
+                          TextStyle(color: Colors.white70, fontSize: 11)),
                       const SizedBox(height: 6),
                       Text(totalQuantity.toString(),
                           style: const TextStyle(
@@ -247,8 +248,8 @@ class CustomerDashboard extends StatelessWidget {
                               fontSize: 28,
                               fontWeight: FontWeight.bold)),
                       const Text("units in stock",
-                          style: TextStyle(
-                              color: Colors.white60, fontSize: 10)),
+                          style:
+                          TextStyle(color: Colors.white60, fontSize: 10)),
                     ],
                   ),
                 ),
@@ -292,7 +293,8 @@ class CustomerDashboard extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF1B5E20)));
+                child:
+                CircularProgressIndicator(color: Color(0xFF1B5E20)));
           }
 
           final allDocs = snapshot.data?.docs ?? [];
@@ -300,7 +302,6 @@ class CustomerDashboard extends StatelessWidget {
           int totalQuantity = allDocs.fold<int>(
               0, (sum, doc) => sum + _parseQty(doc['quantity']));
 
-          // Low stock count from CUSTOMER inventory (qty < 5)
           return StreamBuilder<QuerySnapshot>(
             stream: uid == null
                 ? const Stream.empty()
@@ -312,7 +313,8 @@ class CustomerDashboard extends StatelessWidget {
             builder: (context, invSnap) {
               final invDocs = invSnap.data?.docs ?? [];
               int lowStockCount = invDocs
-                  .where((d) => _parseQty((d.data() as Map)['quantity']) < 5)
+                  .where((d) =>
+              _parseQty((d.data() as Map)['quantity']) < 5)
                   .length;
 
               return SingleChildScrollView(
@@ -320,7 +322,6 @@ class CustomerDashboard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── WELCOME ──
                     FutureBuilder<String>(
                       future: _fetchUserName(),
                       builder: (context, nameSnapshot) {
@@ -344,8 +345,6 @@ class CustomerDashboard extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 25),
-
-                    // ── MANAGE INVENTORY BUTTON ──
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -374,12 +373,8 @@ class CustomerDashboard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 25),
-
-                    // ── HERO BANNER ──
                     _buildInventoryBanner(uniqueProducts, totalQuantity),
                     const SizedBox(height: 20),
-
-                    // ── SUMMARY CARDS ──
                     Row(
                       children: [
                         Expanded(
@@ -404,25 +399,23 @@ class CustomerDashboard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 30),
-
                     const Text("Suppliers & Catalogs",
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF2E4D3E))),
                     const SizedBox(height: 15),
-
-                    // ── SUPPLIER LIST ──
                     StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance
                           .collection('users')
                           .where('role', isEqualTo: 'Supplier')
                           .snapshots(),
                       builder: (context, supplierSnapshot) {
-                        if (!supplierSnapshot.hasData) return const SizedBox();
+                        if (!supplierSnapshot.hasData)
+                          return const SizedBox();
                         return Column(
-                          children:
-                          supplierSnapshot.data!.docs.map((supplier) {
+                          children: supplierSnapshot.data!.docs
+                              .map((supplier) {
                             String sId = supplier['uid'];
                             final sItems = allDocs.where((d) {
                               var data = d.data() as Map<String, dynamic>;
@@ -437,7 +430,8 @@ class CustomerDashboard extends StatelessWidget {
                               elevation: 0,
                               child: ExpansionTile(
                                 leading: CircleAvatar(
-                                    backgroundColor: const Color(0xFFE8F5E9),
+                                    backgroundColor:
+                                    const Color(0xFFE8F5E9),
                                     child: Text(supplier['name'][0],
                                         style: const TextStyle(
                                             color: Color(0xFF1B5E20),
@@ -449,7 +443,8 @@ class CustomerDashboard extends StatelessWidget {
                                 children: sItems.map((item) {
                                   return RequestItemRow(
                                       name: item['name'],
-                                      currentQty: _parseQty(item['quantity']),
+                                      currentQty:
+                                      _parseQty(item['quantity']),
                                       sId: sId);
                                 }).toList(),
                               ),
@@ -509,9 +504,7 @@ class CustomerDashboard extends StatelessWidget {
   }
 }
 
-
-//  MANAGE INVENTORY SCREEN
-
+//  MANAGE INVENTORY SCREEN  ← Search bar added
 class ManageInventoryScreen extends StatefulWidget {
   const ManageInventoryScreen({super.key});
 
@@ -522,6 +515,13 @@ class ManageInventoryScreen extends StatefulWidget {
 class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
   final Map<String, int> _pendingChanges = {};
   final String? _uid = FirebaseAuth.instance.currentUser?.uid;
+
+  // ── Search & filter state ──────────────────
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _showSearchBar = false;
+  String _filterMode = 'All'; // 'All' | 'Low Stock' | 'In Stock'
+  // ──────────────────────────────────────────
 
   int _parseQty(dynamic data) {
     if (data == null) return 0;
@@ -583,6 +583,18 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _closeSearch() => setState(() {
+    _showSearchBar = false;
+    _searchController.clear();
+    _searchQuery = '';
+  });
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE8F5E9),
@@ -594,15 +606,54 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
               color: Color(0xFF1B5E20), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        // ── Inline search OR static title ──
+        title: _showSearchBar
+            ? TextField(
+          controller: _searchController,
+          autofocus: true,
+          onChanged: (v) =>
+              setState(() => _searchQuery = v.trim().toLowerCase()),
+          style: const TextStyle(
+              color: Color(0xFF1B5E20),
+              fontSize: 16,
+              fontWeight: FontWeight.w500),
+          decoration: InputDecoration(
+            hintText: 'Search products or supplier…',
+            hintStyle:
+            const TextStyle(color: Colors.grey, fontSize: 14),
+            border: InputBorder.none,
+            suffixIcon: _searchQuery.isNotEmpty
+                ? IconButton(
+              icon: const Icon(Icons.close,
+                  color: Color(0xFF1B5E20), size: 18),
+              onPressed: () => setState(() {
+                _searchController.clear();
+                _searchQuery = '';
+              }),
+            )
+                : null,
+          ),
+        )
+            : const Text(
           'Manage Inventory',
           style: TextStyle(
               color: Color(0xFF1B5E20), fontWeight: FontWeight.bold),
         ),
-        centerTitle: true,
+        centerTitle: !_showSearchBar,
+        actions: [
+          IconButton(
+            icon: Icon(
+              _showSearchBar ? Icons.search_off : Icons.search,
+              color: const Color(0xFF1B5E20),
+            ),
+            onPressed: () =>
+            _showSearchBar ? _closeSearch() : setState(() => _showSearchBar = true),
+          ),
+        ],
       ),
       body: Column(
         children: [
+          // ── Unsaved-changes banner ──
           if (_pendingChanges.isNotEmpty)
             Container(
               margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
@@ -628,13 +679,43 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
               ),
             ),
 
+          // ── Filter chips ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Row(
+              children: [
+                _FilterChip(
+                  label: 'All',
+                  selected: _filterMode == 'All',
+                  onTap: () => setState(() => _filterMode = 'All'),
+                ),
+                const SizedBox(width: 8),
+                _FilterChip(
+                  label: 'Low Stock',
+                  selected: _filterMode == 'Low Stock',
+                  accentColor: Colors.red.shade600,
+                  onTap: () => setState(() => _filterMode = 'Low Stock'),
+                ),
+                const SizedBox(width: 8),
+                _FilterChip(
+                  label: 'In Stock',
+                  selected: _filterMode == 'In Stock',
+                  accentColor: const Color(0xFF388E3C),
+                  onTap: () => setState(() => _filterMode = 'In Stock'),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Product list ──
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('products')
                   .snapshots(),
               builder: (context, productSnap) {
-                if (productSnap.connectionState == ConnectionState.waiting) {
+                if (productSnap.connectionState ==
+                    ConnectionState.waiting) {
                   return const Center(
                       child: CircularProgressIndicator(
                           color: Color(0xFF1B5E20)));
@@ -663,47 +744,162 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
                     if (invSnap.hasData) {
                       for (final doc in invSnap.data!.docs) {
                         final data = doc.data() as Map<String, dynamic>;
-                        customerQtyMap[doc.id] = _parseQty(data['quantity']);
+                        customerQtyMap[doc.id] =
+                            _parseQty(data['quantity']);
                       }
                     }
 
-                    return ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 110),
-                      itemCount: productDocs.length,
-                      itemBuilder: (context, index) {
-                        final pData = productDocs[index].data()
-                        as Map<String, dynamic>;
-                        final productName =
-                            pData['name'] as String? ?? 'Unknown';
-                        final supplierName =
-                            pData['supplierName'] as String? ?? '';
+                    // ── Apply search + stock filter ──
+                    final filteredDocs = productDocs.where((doc) {
+                      final pData = doc.data() as Map<String, dynamic>;
+                      final name =
+                      (pData['name'] as String? ?? '').toLowerCase();
+                      final supplier =
+                      (pData['supplierName'] as String? ?? '')
+                          .toLowerCase();
 
-                        final storedQty = customerQtyMap[productName] ?? 0;
-                        final currentQty =
-                        _pendingChanges.containsKey(productName)
-                            ? _pendingChanges[productName]!
-                            : storedQty;
-                        final isLow = currentQty < 5;
+                      final matchesSearch = _searchQuery.isEmpty ||
+                          name.contains(_searchQuery) ||
+                          supplier.contains(_searchQuery);
 
-                        return _InventoryProductCard(
-                          docId: productName,
-                          name: productName,
-                          supplierName: supplierName,
-                          currentQty: currentQty,
-                          isLow: isLow,
-                          hasChange: _pendingChanges.containsKey(productName),
-                          onIncrement: () => setState(() =>
-                          _pendingChanges[productName] = currentQty + 1),
-                          onDecrement: () {
-                            if (currentQty > 0) {
-                              setState(() =>
-                              _pendingChanges[productName] = currentQty - 1);
-                            }
-                          },
-                          onSetQty: (newQty) => setState(
-                                  () => _pendingChanges[productName] = newQty),
-                        );
-                      },
+                      final productName = pData['name'] as String? ?? '';
+                      final storedQty = customerQtyMap[productName] ?? 0;
+                      final currentQty =
+                      _pendingChanges.containsKey(productName)
+                          ? _pendingChanges[productName]!
+                          : storedQty;
+                      final isLow = currentQty < 5;
+
+                      final matchesFilter = _filterMode == 'All' ||
+                          (_filterMode == 'Low Stock' && isLow) ||
+                          (_filterMode == 'In Stock' && !isLow);
+
+                      return matchesSearch && matchesFilter;
+                    }).toList();
+
+                    // ── Empty state ──
+                    if (filteredDocs.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _searchQuery.isNotEmpty
+                                  ? Icons.search_off
+                                  : Icons.inventory_2_outlined,
+                              size: 56,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _searchQuery.isNotEmpty
+                                  ? 'No results for "$_searchQuery"'
+                                  : 'No items in this category',
+                              style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500),
+                            ),
+                            if (_searchQuery.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              TextButton(
+                                onPressed: () => setState(() {
+                                  _searchController.clear();
+                                  _searchQuery = '';
+                                }),
+                                child: const Text("Clear search",
+                                    style: TextStyle(
+                                        color: Color(0xFF1B5E20))),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Result count label
+                        if (_searchQuery.isNotEmpty || _filterMode != 'All')
+                          Padding(
+                            padding:
+                            const EdgeInsets.fromLTRB(16, 8, 16, 2),
+                            child: RichText(
+                              text: TextSpan(
+                                style: const TextStyle(fontSize: 12),
+                                children: [
+                                  TextSpan(
+                                    text:
+                                    "${filteredDocs.length} result${filteredDocs.length == 1 ? '' : 's'}",
+                                    style: const TextStyle(
+                                        color: Color(0xFF1B5E20),
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  if (_searchQuery.isNotEmpty) ...[
+                                    const TextSpan(
+                                        text: ' for ',
+                                        style:
+                                        TextStyle(color: Colors.grey)),
+                                    TextSpan(
+                                      text: '"$_searchQuery"',
+                                      style: const TextStyle(
+                                          color: Color(0xFF1B5E20),
+                                          fontStyle: FontStyle.italic,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+
+                        Expanded(
+                          child: ListView.builder(
+                            padding:
+                            const EdgeInsets.fromLTRB(16, 6, 16, 110),
+                            itemCount: filteredDocs.length,
+                            itemBuilder: (context, index) {
+                              final pData = filteredDocs[index].data()
+                              as Map<String, dynamic>;
+                              final productName =
+                                  pData['name'] as String? ?? 'Unknown';
+                              final supplierName =
+                                  pData['supplierName'] as String? ?? '';
+                              final storedQty =
+                                  customerQtyMap[productName] ?? 0;
+                              final currentQty =
+                              _pendingChanges.containsKey(productName)
+                                  ? _pendingChanges[productName]!
+                                  : storedQty;
+                              final isLow = currentQty < 5;
+
+                              return _InventoryProductCard(
+                                docId: productName,
+                                name: productName,
+                                supplierName: supplierName,
+                                currentQty: currentQty,
+                                isLow: isLow,
+                                hasChange:
+                                _pendingChanges.containsKey(productName),
+                                searchQuery: _searchQuery,
+                                onIncrement: () => setState(() =>
+                                _pendingChanges[productName] =
+                                    currentQty + 1),
+                                onDecrement: () {
+                                  if (currentQty > 0) {
+                                    setState(() =>
+                                    _pendingChanges[productName] =
+                                        currentQty - 1);
+                                  }
+                                },
+                                onSetQty: (newQty) => setState(() =>
+                                _pendingChanges[productName] = newQty),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                     );
                   },
                 );
@@ -728,8 +924,58 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
   }
 }
 
-//  CUSTOMER LOW STOCK SCREEN
 
+//  FILTER CHIP
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Color? accentColor;
+
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = accentColor ?? const Color(0xFF1B5E20);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? color : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+              color: selected ? color : Colors.grey.shade300, width: 1.3),
+          boxShadow: selected
+              ? [
+            BoxShadow(
+                color: color.withOpacity(0.25),
+                blurRadius: 6,
+                offset: const Offset(0, 2))
+          ]
+              : [],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.grey.shade700,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+//  CUSTOMER LOW STOCK SCREEN
 class CustomerLowStockScreen extends StatelessWidget {
   const CustomerLowStockScreen({super.key});
 
@@ -806,7 +1052,8 @@ class CustomerLowStockScreen extends StatelessWidget {
                   const SizedBox(height: 6),
                   const Text(
                     "No items are below 5 units.",
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                    style:
+                    TextStyle(color: Colors.grey, fontSize: 14),
                   ),
                 ],
               ),
@@ -815,7 +1062,6 @@ class CustomerLowStockScreen extends StatelessWidget {
 
           return Column(
             children: [
-              // ── Summary Banner ──
               Container(
                 margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 padding: const EdgeInsets.symmetric(
@@ -851,11 +1097,10 @@ class CustomerLowStockScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // ── Low Stock List ──
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                  padding:
+                  const EdgeInsets.fromLTRB(16, 4, 16, 24),
                   itemCount: lowItems.length,
                   itemBuilder: (context, index) {
                     final data =
@@ -872,7 +1117,8 @@ class CustomerLowStockScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.red.shade100),
+                        border:
+                        Border.all(color: Colors.red.shade100),
                         boxShadow: [
                           BoxShadow(
                               color: Colors.black.withOpacity(0.04),
@@ -887,10 +1133,12 @@ class CustomerLowStockScreen extends StatelessWidget {
                             height: 44,
                             decoration: BoxDecoration(
                               color: Colors.red.shade50,
-                              borderRadius: BorderRadius.circular(11),
+                              borderRadius:
+                              BorderRadius.circular(11),
                             ),
                             child: Icon(Icons.inventory_2_rounded,
-                                color: Colors.red.shade400, size: 22),
+                                color: Colors.red.shade400,
+                                size: 22),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
@@ -909,7 +1157,8 @@ class CustomerLowStockScreen extends StatelessWidget {
                               color: qty == 0
                                   ? Colors.red.shade700
                                   : Colors.red.shade100,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius:
+                              BorderRadius.circular(20),
                             ),
                             child: Text(
                               qty == 0 ? "Out of Stock" : "$qty left",
@@ -934,8 +1183,9 @@ class CustomerLowStockScreen extends StatelessWidget {
     );
   }
 }
-//  INVENTORY PRODUCT CARD  (+/- controls)
 
+
+//  INVENTORY PRODUCT CARD
 class _InventoryProductCard extends StatefulWidget {
   final String docId;
   final String name;
@@ -943,6 +1193,7 @@ class _InventoryProductCard extends StatefulWidget {
   final int currentQty;
   final bool isLow;
   final bool hasChange;
+  final String searchQuery;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
   final ValueChanged<int> onSetQty;
@@ -957,10 +1208,12 @@ class _InventoryProductCard extends StatefulWidget {
     required this.onIncrement,
     required this.onDecrement,
     required this.onSetQty,
+    this.searchQuery = '',
   });
 
   @override
-  State<_InventoryProductCard> createState() => _InventoryProductCardState();
+  State<_InventoryProductCard> createState() =>
+      _InventoryProductCardState();
 }
 
 class _InventoryProductCardState extends State<_InventoryProductCard> {
@@ -970,15 +1223,14 @@ class _InventoryProductCardState extends State<_InventoryProductCard> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.currentQty.toString());
+    _controller =
+        TextEditingController(text: widget.currentQty.toString());
   }
 
   @override
   void didUpdateWidget(covariant _InventoryProductCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_editingQty) {
-      _controller.text = widget.currentQty.toString();
-    }
+    if (!_editingQty) _controller.text = widget.currentQty.toString();
   }
 
   @override
@@ -995,6 +1247,27 @@ class _InventoryProductCardState extends State<_InventoryProductCard> {
       _controller.text = widget.currentQty.toString();
     }
     setState(() => _editingQty = false);
+  }
+
+  /// Renders [text] with the matched portion of [query] highlighted in green.
+  Widget _highlighted(String text, String query, TextStyle base) {
+    if (query.isEmpty) return Text(text, style: base);
+    final lc = text.toLowerCase();
+    final idx = lc.indexOf(query.toLowerCase());
+    if (idx == -1) return Text(text, style: base);
+    final hl = base.copyWith(
+      color: const Color(0xFF1B5E20),
+      fontWeight: FontWeight.bold,
+      backgroundColor: const Color(0xFF1B5E20).withOpacity(0.12),
+    );
+    return RichText(
+      overflow: TextOverflow.ellipsis,
+      text: TextSpan(children: [
+        TextSpan(text: text.substring(0, idx), style: base),
+        TextSpan(text: text.substring(idx, idx + query.length), style: hl),
+        TextSpan(text: text.substring(idx + query.length), style: base),
+      ]),
+    );
   }
 
   @override
@@ -1049,13 +1322,13 @@ class _InventoryProductCardState extends State<_InventoryProductCard> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
+                        child: _highlighted(
                           widget.name,
-                          style: const TextStyle(
+                          widget.searchQuery,
+                          const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
                               color: Color(0xFF1B2E1B)),
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (widget.isLow)
@@ -1091,9 +1364,11 @@ class _InventoryProductCardState extends State<_InventoryProductCard> {
                   ),
                   if (widget.supplierName.isNotEmpty) ...[
                     const SizedBox(height: 3),
-                    Text(widget.supplierName,
-                        style:
-                        const TextStyle(color: Colors.grey, fontSize: 11)),
+                    _highlighted(
+                      widget.supplierName,
+                      widget.searchQuery,
+                      const TextStyle(color: Colors.grey, fontSize: 11),
+                    ),
                   ],
                 ],
               ),
@@ -1247,11 +1522,13 @@ class _RequestItemRowState extends State<RequestItemRow> {
             children: [
               Expanded(
                   child: Text(widget.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold))),
+                      style:
+                      const TextStyle(fontWeight: FontWeight.bold))),
               Text("Stock: ${widget.currentQty}",
                   style: TextStyle(
-                      color:
-                      widget.currentQty < 5 ? Colors.red : Colors.black54,
+                      color: widget.currentQty < 5
+                          ? Colors.red
+                          : Colors.black54,
                       fontSize: 12)),
             ],
           ),
@@ -1310,9 +1587,11 @@ class _RequestItemRowState extends State<RequestItemRow> {
                         SnackBar(
                           content: Column(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment:
+                            CrossAxisAlignment.start,
                             children: [
-                              const Text("Request Sent Successfully!",
+                              const Text(
+                                  "Request Sent Successfully!",
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
@@ -1320,14 +1599,16 @@ class _RequestItemRowState extends State<RequestItemRow> {
                               Text(
                                 "The supplier for ${widget.name} has been notified.",
                                 style: const TextStyle(
-                                    fontSize: 12, color: Colors.white70),
+                                    fontSize: 12,
+                                    color: Colors.white70),
                               ),
                             ],
                           ),
                           backgroundColor: const Color(0xFF1B5E20),
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15)),
+                              borderRadius:
+                              BorderRadius.circular(15)),
                           margin: const EdgeInsets.all(20),
                           duration: const Duration(seconds: 4),
                         ),
@@ -1335,7 +1616,8 @@ class _RequestItemRowState extends State<RequestItemRow> {
                     }
                   } catch (e) {
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(
                           content: Text("Error: $e"),
                           backgroundColor: Colors.red.shade800,
                           behavior: SnackBarBehavior.floating));
