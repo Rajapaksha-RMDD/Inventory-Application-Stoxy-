@@ -17,18 +17,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
+  // --- UPDATED LOGIN LOGIC ---
   Future<void> _login() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      _showSnackBar("Please enter email and password");
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showSnackBar("Please enter your email and password.", isError: true);
       return;
     }
 
     setState(() => _isLoading = true);
+
     try {
       UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim());
+          .signInWithEmailAndPassword(email: email, password: password);
 
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
@@ -39,31 +42,83 @@ class _LoginScreenState extends State<LoginScreen> {
         String role = userDoc['role'] ?? 'Customer';
 
         if (mounted) {
-          if (role == 'Supplier') {
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const SupplierDashboard())
-            );
-          } else {
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const CustomerDashboard())
-            );
-          }
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => role == 'Supplier'
+                  ? const SupplierDashboard()
+                  : const CustomerDashboard(),
+            ),
+          );
         }
       } else {
-        _showSnackBar("User record not found in database.");
+        _showSnackBar("Account record not found. Please register.", isError: true);
       }
+    } on FirebaseAuthException catch (e) {
+      // Mapping ugly Firebase codes to beautiful user messages
+      String message;
+      switch (e.code) {
+        case 'invalid-email':
+          message = "That email address doesn't look right.";
+          break;
+        case 'user-disabled':
+          message = "This account has been disabled. Contact support.";
+          break;
+        case 'user-not-found':
+          message = "No account found with this email.";
+          break;
+        case 'wrong-password':
+          message = "Incorrect password. Please try again.";
+          break;
+        case 'invalid-credential':
+          message = "Invalid email or password. Please check your details.";
+          break;
+        case 'network-request-failed':
+          message = "No internet connection. Please check your network.";
+          break;
+        case 'too-many-requests':
+          message = "Too many failed attempts. Try again in a few minutes.";
+          break;
+        default:
+          message = "Login failed. Please try again later.";
+      }
+      _showSnackBar(message, isError: true);
     } catch (e) {
-      _showSnackBar("Login Failed: ${e.toString()}");
+      _showSnackBar("An unexpected error occurred.", isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showSnackBar(String message) {
+  // --- BEAUTIFUL FLOATING SNACKBAR ---
+  void _showSnackBar(String message, {bool isError = false}) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                isError ? Icons.error_outline_rounded : Icons.check_circle_outline,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: isError ? Colors.red.shade800 : const Color(0xFF1B5E20),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          duration: const Duration(seconds: 3),
+          elevation: 4,
+        ),
+      );
     }
   }
 
@@ -85,8 +140,6 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 60),
-
-              // 1. Logo Animation (Fade & Scale)
               _animatedEntrance(
                 delay: 0,
                 child: Center(
@@ -103,10 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 50),
-
-              // 2. Email Section Animation
               _animatedEntrance(
                 delay: 200,
                 child: Column(
@@ -121,8 +171,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-
-              // 3. Password Section Animation
               _animatedEntrance(
                 delay: 400,
                 child: Column(
@@ -138,20 +186,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 30),
-
-              // 4. Button Animation
               _animatedEntrance(
                 delay: 600,
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20)))
                     : _buildActionButton("Login", _login),
               ),
-
               const SizedBox(height: 20),
-
-              // 5. Footer Animation
               _animatedEntrance(
                 delay: 800,
                 child: Center(
@@ -174,7 +216,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // --- ANIMATION HELPER ---
   Widget _animatedEntrance({required int delay, required Widget child}) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
@@ -193,7 +234,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // --- UI HELPER METHODS ---
   Widget _buildLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0, left: 4),
