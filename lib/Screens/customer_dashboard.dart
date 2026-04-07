@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'login_screen.dart';
+import 'package:stoxy/Screens/login_screen.dart';
+import 'package:stoxy/Screens/add_product_screen.dart';
 
 
 //  CUSTOMER DASHBOARD
@@ -345,33 +346,58 @@ class CustomerDashboard extends StatelessWidget {
                       },
                     ),
                     const SizedBox(height: 25),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1B5E20),
-                          padding:
-                          const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15)),
-                          elevation: 3,
+
+                    // ── Two buttons side by side ──
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1B5E20),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15)),
+                              elevation: 3,
+                            ),
+                            icon: const Icon(Icons.edit_note_rounded,
+                                color: Colors.white, size: 20),
+                            label: const Text("Manage",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold)),
+                            onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const ManageInventoryScreen())),
+                          ),
                         ),
-                        icon: const Icon(Icons.edit_note_rounded,
-                            color: Colors.white, size: 22),
-                        label: const Text(
-                          "Manage Inventory",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1B5E20),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15)),
+                              elevation: 3,
+                            ),
+                            icon: const Icon(Icons.add_circle_outline_rounded,
+                                color: Colors.white, size: 20),
+                            label: const Text("Add Product",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold)),
+                            onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const AddProductScreen())),
+                          ),
                         ),
-                        onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                const ManageInventoryScreen())),
-                      ),
+                      ],
                     ),
+
                     const SizedBox(height: 25),
                     _buildInventoryBanner(uniqueProducts, totalQuantity),
                     const SizedBox(height: 20),
@@ -504,7 +530,7 @@ class CustomerDashboard extends StatelessWidget {
   }
 }
 
-//  MANAGE INVENTORY SCREEN  ← Search bar added
+//  MANAGE INVENTORY SCREEN
 class ManageInventoryScreen extends StatefulWidget {
   const ManageInventoryScreen({super.key});
 
@@ -516,12 +542,10 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
   final Map<String, int> _pendingChanges = {};
   final String? _uid = FirebaseAuth.instance.currentUser?.uid;
 
-  // ── Search & filter state ──────────────────
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _showSearchBar = false;
-  String _filterMode = 'All'; // 'All' | 'Low Stock' | 'In Stock'
-  // ──────────────────────────────────────────
+  String _filterMode = 'All';
 
   int _parseQty(dynamic data) {
     if (data == null) return 0;
@@ -606,7 +630,6 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
               color: Color(0xFF1B5E20), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        // ── Inline search OR static title ──
         title: _showSearchBar
             ? TextField(
           controller: _searchController,
@@ -649,11 +672,18 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
             onPressed: () =>
             _showSearchBar ? _closeSearch() : setState(() => _showSearchBar = true),
           ),
+          // ── Add Product button ──
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline_rounded,
+                color: Color(0xFF1B5E20)),
+            tooltip: 'Add Product',
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const AddProductScreen())),
+          ),
         ],
       ),
       body: Column(
         children: [
-          // ── Unsaved-changes banner ──
           if (_pendingChanges.isNotEmpty)
             Container(
               margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
@@ -679,7 +709,6 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
               ),
             ),
 
-          // ── Filter chips ──
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Row(
@@ -707,15 +736,13 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
             ),
           ),
 
-          // ── Product list ──
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('products')
                   .snapshots(),
               builder: (context, productSnap) {
-                if (productSnap.connectionState ==
-                    ConnectionState.waiting) {
+                if (productSnap.connectionState == ConnectionState.waiting) {
                   return const Center(
                       child: CircularProgressIndicator(
                           color: Color(0xFF1B5E20)));
@@ -744,24 +771,19 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
                     if (invSnap.hasData) {
                       for (final doc in invSnap.data!.docs) {
                         final data = doc.data() as Map<String, dynamic>;
-                        customerQtyMap[doc.id] =
-                            _parseQty(data['quantity']);
+                        customerQtyMap[doc.id] = _parseQty(data['quantity']);
                       }
                     }
 
-                    // ── Apply search + stock filter ──
                     final filteredDocs = productDocs.where((doc) {
                       final pData = doc.data() as Map<String, dynamic>;
                       final name =
                       (pData['name'] as String? ?? '').toLowerCase();
                       final supplier =
-                      (pData['supplierName'] as String? ?? '')
-                          .toLowerCase();
-
+                      (pData['supplierName'] as String? ?? '').toLowerCase();
                       final matchesSearch = _searchQuery.isEmpty ||
                           name.contains(_searchQuery) ||
                           supplier.contains(_searchQuery);
-
                       final productName = pData['name'] as String? ?? '';
                       final storedQty = customerQtyMap[productName] ?? 0;
                       final currentQty =
@@ -769,15 +791,12 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
                           ? _pendingChanges[productName]!
                           : storedQty;
                       final isLow = currentQty < 5;
-
                       final matchesFilter = _filterMode == 'All' ||
                           (_filterMode == 'Low Stock' && isLow) ||
                           (_filterMode == 'In Stock' && !isLow);
-
                       return matchesSearch && matchesFilter;
                     }).toList();
 
-                    // ── Empty state ──
                     if (filteredDocs.isEmpty) {
                       return Center(
                         child: Column(
@@ -820,11 +839,9 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Result count label
                         if (_searchQuery.isNotEmpty || _filterMode != 'All')
                           Padding(
-                            padding:
-                            const EdgeInsets.fromLTRB(16, 8, 16, 2),
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 2),
                             child: RichText(
                               text: TextSpan(
                                 style: const TextStyle(fontSize: 12),
@@ -839,8 +856,7 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
                                   if (_searchQuery.isNotEmpty) ...[
                                     const TextSpan(
                                         text: ' for ',
-                                        style:
-                                        TextStyle(color: Colors.grey)),
+                                        style: TextStyle(color: Colors.grey)),
                                     TextSpan(
                                       text: '"$_searchQuery"',
                                       style: const TextStyle(
@@ -853,11 +869,9 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
                               ),
                             ),
                           ),
-
                         Expanded(
                           child: ListView.builder(
-                            padding:
-                            const EdgeInsets.fromLTRB(16, 6, 16, 110),
+                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 110),
                             itemCount: filteredDocs.length,
                             itemBuilder: (context, index) {
                               final pData = filteredDocs[index].data()
@@ -873,7 +887,6 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
                                   ? _pendingChanges[productName]!
                                   : storedQty;
                               final isLow = currentQty < 5;
-
                               return _InventoryProductCard(
                                 docId: productName,
                                 name: productName,
@@ -884,17 +897,15 @@ class _ManageInventoryScreenState extends State<ManageInventoryScreen> {
                                 _pendingChanges.containsKey(productName),
                                 searchQuery: _searchQuery,
                                 onIncrement: () => setState(() =>
-                                _pendingChanges[productName] =
-                                    currentQty + 1),
+                                _pendingChanges[productName] = currentQty + 1),
                                 onDecrement: () {
                                   if (currentQty > 0) {
                                     setState(() =>
-                                    _pendingChanges[productName] =
-                                        currentQty - 1);
+                                    _pendingChanges[productName] = currentQty - 1);
                                   }
                                 },
-                                onSetQty: (newQty) => setState(() =>
-                                _pendingChanges[productName] = newQty),
+                                onSetQty: (newQty) => setState(
+                                        () => _pendingChanges[productName] = newQty),
                               );
                             },
                           ),
@@ -1021,12 +1032,10 @@ class CustomerLowStockScreen extends StatelessWidget {
                 child: CircularProgressIndicator(
                     color: Color(0xFF1B5E20)));
           }
-
           final lowItems = (snap.data?.docs ?? [])
               .where((d) =>
           _parseQty((d.data() as Map)['quantity']) < 5)
               .toList();
-
           if (lowItems.isEmpty) {
             return Center(
               child: Column(
@@ -1042,24 +1051,18 @@ class CustomerLowStockScreen extends StatelessWidget {
                         size: 64, color: Color(0xFF1B5E20)),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    "All stocked up!",
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1B5E20)),
-                  ),
+                  const Text("All stocked up!",
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1B5E20))),
                   const SizedBox(height: 6),
-                  const Text(
-                    "No items are below 5 units.",
-                    style:
-                    TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
+                  const Text("No items are below 5 units.",
+                      style: TextStyle(color: Colors.grey, fontSize: 14)),
                 ],
               ),
             );
           }
-
           return Column(
             children: [
               Container(
@@ -1079,19 +1082,14 @@ class CustomerLowStockScreen extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          "${lowItems.length} item(s) running low",
-                          style: TextStyle(
-                              color: Colors.red.shade800,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15),
-                        ),
-                        Text(
-                          "Quantities below 5 units",
-                          style: TextStyle(
-                              color: Colors.red.shade400,
-                              fontSize: 12),
-                        ),
+                        Text("${lowItems.length} item(s) running low",
+                            style: TextStyle(
+                                color: Colors.red.shade800,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15)),
+                        Text("Quantities below 5 units",
+                            style: TextStyle(
+                                color: Colors.red.shade400, fontSize: 12)),
                       ],
                     ),
                   ],
@@ -1099,17 +1097,14 @@ class CustomerLowStockScreen extends StatelessWidget {
               ),
               Expanded(
                 child: ListView.builder(
-                  padding:
-                  const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                   itemCount: lowItems.length,
                   itemBuilder: (context, index) {
                     final data =
                     lowItems[index].data() as Map<String, dynamic>;
-                    final productName =
-                        data['productName'] as String? ??
-                            lowItems[index].id;
+                    final productName = data['productName'] as String? ??
+                        lowItems[index].id;
                     final qty = _parseQty(data['quantity']);
-
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.symmetric(
@@ -1117,8 +1112,7 @@ class CustomerLowStockScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
-                        border:
-                        Border.all(color: Colors.red.shade100),
+                        border: Border.all(color: Colors.red.shade100),
                         boxShadow: [
                           BoxShadow(
                               color: Colors.black.withOpacity(0.04),
@@ -1129,26 +1123,21 @@ class CustomerLowStockScreen extends StatelessWidget {
                       child: Row(
                         children: [
                           Container(
-                            width: 44,
-                            height: 44,
+                            width: 44, height: 44,
                             decoration: BoxDecoration(
                               color: Colors.red.shade50,
-                              borderRadius:
-                              BorderRadius.circular(11),
+                              borderRadius: BorderRadius.circular(11),
                             ),
                             child: Icon(Icons.inventory_2_rounded,
-                                color: Colors.red.shade400,
-                                size: 22),
+                                color: Colors.red.shade400, size: 22),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
-                            child: Text(
-                              productName,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: Color(0xFF1B2E1B)),
-                            ),
+                            child: Text(productName,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: Color(0xFF1B2E1B))),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -1157,8 +1146,7 @@ class CustomerLowStockScreen extends StatelessWidget {
                               color: qty == 0
                                   ? Colors.red.shade700
                                   : Colors.red.shade100,
-                              borderRadius:
-                              BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
                               qty == 0 ? "Out of Stock" : "$qty left",
@@ -1212,8 +1200,7 @@ class _InventoryProductCard extends StatefulWidget {
   });
 
   @override
-  State<_InventoryProductCard> createState() =>
-      _InventoryProductCardState();
+  State<_InventoryProductCard> createState() => _InventoryProductCardState();
 }
 
 class _InventoryProductCardState extends State<_InventoryProductCard> {
@@ -1223,8 +1210,7 @@ class _InventoryProductCardState extends State<_InventoryProductCard> {
   @override
   void initState() {
     super.initState();
-    _controller =
-        TextEditingController(text: widget.currentQty.toString());
+    _controller = TextEditingController(text: widget.currentQty.toString());
   }
 
   @override
@@ -1249,7 +1235,6 @@ class _InventoryProductCardState extends State<_InventoryProductCard> {
     setState(() => _editingQty = false);
   }
 
-  /// Renders [text] with the matched portion of [query] highlighted in green.
   Widget _highlighted(String text, String query, TextStyle base) {
     if (query.isEmpty) return Text(text, style: base);
     final lc = text.toLowerCase();
@@ -1298,21 +1283,18 @@ class _InventoryProductCardState extends State<_InventoryProductCard> {
         child: Row(
           children: [
             Container(
-              width: 46,
-              height: 46,
+              width: 46, height: 46,
               decoration: BoxDecoration(
                 color: widget.isLow
                     ? Colors.red.shade50
                     : const Color(0xFFE8F5E9),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Icons.inventory_2_rounded,
-                color: widget.isLow
-                    ? Colors.red.shade400
-                    : const Color(0xFF388E3C),
-                size: 22,
-              ),
+              child: Icon(Icons.inventory_2_rounded,
+                  color: widget.isLow
+                      ? Colors.red.shade400
+                      : const Color(0xFF388E3C),
+                  size: 22),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -1323,8 +1305,7 @@ class _InventoryProductCardState extends State<_InventoryProductCard> {
                     children: [
                       Expanded(
                         child: _highlighted(
-                          widget.name,
-                          widget.searchQuery,
+                          widget.name, widget.searchQuery,
                           const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
@@ -1364,11 +1345,8 @@ class _InventoryProductCardState extends State<_InventoryProductCard> {
                   ),
                   if (widget.supplierName.isNotEmpty) ...[
                     const SizedBox(height: 3),
-                    _highlighted(
-                      widget.supplierName,
-                      widget.searchQuery,
-                      const TextStyle(color: Colors.grey, fontSize: 11),
-                    ),
+                    _highlighted(widget.supplierName, widget.searchQuery,
+                        const TextStyle(color: Colors.grey, fontSize: 11)),
                   ],
                 ],
               ),
@@ -1395,8 +1373,7 @@ class _InventoryProductCardState extends State<_InventoryProductCard> {
                   },
                   child: _editingQty
                       ? SizedBox(
-                    width: 52,
-                    height: 36,
+                    width: 52, height: 36,
                     child: TextField(
                       controller: _controller,
                       keyboardType: TextInputType.number,
@@ -1418,8 +1395,7 @@ class _InventoryProductCardState extends State<_InventoryProductCard> {
                     ),
                   )
                       : Container(
-                    width: 52,
-                    height: 36,
+                    width: 52, height: 36,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: widget.hasChange
@@ -1473,8 +1449,7 @@ class _CircleIconButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 32,
-        height: 32,
+        width: 32, height: 32,
         decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         child: Icon(icon, color: iconColor, size: 18),
       ),
@@ -1484,7 +1459,6 @@ class _CircleIconButton extends StatelessWidget {
 
 
 //  REQUEST ITEM ROW
-
 class RequestItemRow extends StatefulWidget {
   final String name;
   final int currentQty;
@@ -1522,8 +1496,7 @@ class _RequestItemRowState extends State<RequestItemRow> {
             children: [
               Expanded(
                   child: Text(widget.name,
-                      style:
-                      const TextStyle(fontWeight: FontWeight.bold))),
+                      style: const TextStyle(fontWeight: FontWeight.bold))),
               Text("Stock: ${widget.currentQty}",
                   style: TextStyle(
                       color: widget.currentQty < 5
@@ -1587,11 +1560,9 @@ class _RequestItemRowState extends State<RequestItemRow> {
                         SnackBar(
                           content: Column(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                  "Request Sent Successfully!",
+                              const Text("Request Sent Successfully!",
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
@@ -1599,16 +1570,14 @@ class _RequestItemRowState extends State<RequestItemRow> {
                               Text(
                                 "The supplier for ${widget.name} has been notified.",
                                 style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white70),
+                                    fontSize: 12, color: Colors.white70),
                               ),
                             ],
                           ),
                           backgroundColor: const Color(0xFF1B5E20),
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(
-                              borderRadius:
-                              BorderRadius.circular(15)),
+                              borderRadius: BorderRadius.circular(15)),
                           margin: const EdgeInsets.all(20),
                           duration: const Duration(seconds: 4),
                         ),
@@ -1616,8 +1585,7 @@ class _RequestItemRowState extends State<RequestItemRow> {
                     }
                   } catch (e) {
                     if (mounted) {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(SnackBar(
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                           content: Text("Error: $e"),
                           backgroundColor: Colors.red.shade800,
                           behavior: SnackBarBehavior.floating));
